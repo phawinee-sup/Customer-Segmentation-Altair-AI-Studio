@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="10.4.001">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="10.4.001" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="10.4.001" expanded="true" height="68" name="Retrieve financial_db" width="90" x="45" y="187">
+        <parameter key="repository_entry" value="/Connections/financial_db"/>
+      </operator>
+      <operator activated="true" class="jdbc_connectors:read_database" compatibility="10.4.001" expanded="true" height="82" name="Read Database" width="90" x="179" y="187">
+        <parameter key="define_connection" value="repository"/>
+        <parameter key="database_system" value="MySQL"/>
+        <parameter key="define_query" value="table name"/>
+        <parameter key="use_default_schema" value="true"/>
+        <parameter key="table_name" value="payment_transaction"/>
+        <parameter key="prepare_statement" value="false"/>
+        <enumeration key="parameters"/>
+        <parameter key="data_management" value="auto"/>
+      </operator>
+      <operator activated="true" class="filter_examples" compatibility="10.4.001" expanded="true" height="103" name="Filter Examples" width="90" x="313" y="187">
+        <parameter key="parameter_expression" value=""/>
+        <parameter key="condition_class" value="custom_filters"/>
+        <parameter key="invert_filter" value="false"/>
+        <list key="filters_list">
+          <parameter key="filters_entry_key" value="Payment_Date.is_not_missing."/>
+        </list>
+        <parameter key="filters_logic_and" value="true"/>
+        <parameter key="filters_check_metadata" value="true"/>
+      </operator>
+      <operator activated="true" class="blending:generate_columns" compatibility="10.4.001" expanded="true" height="82" name="Generate Attributes" width="90" x="447" y="187">
+        <list key="function_descriptions">
+          <parameter key="diff_date" value="date_diff(Payment_Date,Due_Date,DATE_UNIT_DAY,&quot;Asia/Bangkok&quot;)"/>
+        </list>
+        <parameter key="keep_all_columns" value="true"/>
+        <parameter key="default_time_zone" value="Asia/Bangkok"/>
+      </operator>
+      <operator activated="true" class="generate_copy" compatibility="10.4.001" expanded="true" height="82" name="Generate Copy" width="90" x="581" y="187">
+        <parameter key="attribute_name" value="diff_date"/>
+        <parameter key="new_name" value="category"/>
+      </operator>
+      <operator activated="true" class="discretize_by_user_specification" compatibility="10.4.001" expanded="true" height="103" name="Discretize" width="90" x="715" y="187">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="category"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <list key="classes">
+          <parameter key="pay_before" value="Infinity"/>
+          <parameter key="pay_ontime" value="0.0"/>
+          <parameter key="pay_after" value="-1.0"/>
+        </list>
+      </operator>
+      <operator activated="true" class="generate_absolutes" compatibility="10.4.001" expanded="true" height="82" name="Generate Absolutes" width="90" x="849" y="187">
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="diff_date"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+      </operator>
+      <operator activated="true" class="blending:pivot" compatibility="10.4.001" expanded="true" height="103" name="Pivot" width="90" x="983" y="187">
+        <parameter key="group_by_attributes" value="Customer_ID"/>
+        <parameter key="column_grouping_attribute" value="category"/>
+        <list key="aggregation_attributes">
+          <parameter key="diff_date" value="minimum"/>
+          <parameter key="diff_date" value="maximum"/>
+          <parameter key="diff_date" value="average"/>
+          <parameter key="diff_date" value="count"/>
+        </list>
+        <parameter key="use_default_aggregation" value="false"/>
+        <parameter key="default_aggregation_function" value="first"/>
+      </operator>
+      <operator activated="true" class="replace_missing_values" compatibility="10.4.001" expanded="true" height="103" name="Replace Missing Values" width="90" x="1117" y="187">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="attribute_filter_type" value="subset"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value="average(diff_date)_pay_after|average(diff_date)_pay_before|average(diff_date)_pay_ontime|count(diff_date)_pay_after|count(diff_date)_pay_before|count(diff_date)_pay_ontime|maximum(diff_date)_pay_after|maximum(diff_date)_pay_before|maximum(diff_date)_pay_ontime|minimum(diff_date)_pay_after|minimum(diff_date)_pay_before|minimum(diff_date)_pay_ontime"/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default" value="zero"/>
+        <list key="columns"/>
+      </operator>
+      <operator activated="true" class="blending:generate_columns" compatibility="10.4.001" expanded="true" height="82" name="Generate Attributes (2)" width="90" x="1251" y="187">
+        <list key="function_descriptions">
+          <parameter key="percent_before" value="([count(diff_date)_pay_before]/([count(diff_date)_pay_before]+[count(diff_date)_pay_ontime]+[count(diff_date)_pay_after]))*100"/>
+          <parameter key="percent_ontime" value="([count(diff_date)_pay_ontime]/([count(diff_date)_pay_before]+[count(diff_date)_pay_ontime]+[count(diff_date)_pay_after]))*100"/>
+          <parameter key="percent_after" value="([count(diff_date)_pay_after]/([count(diff_date)_pay_before]+[count(diff_date)_pay_ontime]+[count(diff_date)_pay_after]))*100"/>
+        </list>
+        <parameter key="keep_all_columns" value="true"/>
+        <parameter key="default_time_zone" value="Asia/Bangkok"/>
+      </operator>
+      <operator activated="true" class="blending:select_attributes" compatibility="10.4.001" expanded="true" height="82" name="Select Attributes" width="90" x="1385" y="187">
+        <parameter key="type" value="include attributes"/>
+        <parameter key="attribute_filter_type" value="a subset"/>
+        <parameter key="select_attribute" value=""/>
+        <parameter key="select_subset" value="Customer_ID␞minimum(diff_date)_pay_before␞maximum(diff_date)_pay_before␞average(diff_date)_pay_before␞minimum(diff_date)_pay_after␞maximum(diff_date)_pay_after␞average(diff_date)_pay_after␞percent_after␞percent_before␞percent_ontime"/>
+        <parameter key="also_apply_to_special_attributes_(id,_label..)" value="false"/>
+      </operator>
+      <operator activated="true" class="blending:rename" compatibility="10.4.001" expanded="true" height="82" name="Rename" width="90" x="1519" y="187">
+        <list key="rename attributes">
+          <parameter key="minimum(diff_date)_pay_before" value="min_days_before"/>
+          <parameter key="maximum(diff_date)_pay_before" value="max_days_before"/>
+          <parameter key="average(diff_date)_pay_before" value="avg_days_before"/>
+          <parameter key="minimum(diff_date)_pay_after" value="min_days_after"/>
+          <parameter key="maximum(diff_date)_pay_after" value="max_days_after"/>
+          <parameter key="average(diff_date)_pay_after" value="avg_days_after"/>
+        </list>
+        <parameter key="from_attribute" value=""/>
+        <parameter key="to_attribute" value=""/>
+      </operator>
+      <operator activated="true" class="order_attributes" compatibility="10.4.001" expanded="true" height="82" name="Reorder Attributes" width="90" x="1653" y="187">
+        <parameter key="sort_mode" value="user specified"/>
+        <parameter key="attribute_ordering" value="Customer_ID|min_days_before|max_days_before|avg_days_before|min_days_after|max_days_after|avg_days_after|percent_before|percent_ontime|percent_after"/>
+        <parameter key="use_regular_expressions" value="false"/>
+        <parameter key="handle_unmatched" value="append"/>
+        <parameter key="sort_direction" value="none"/>
+      </operator>
+      <connect from_op="Retrieve financial_db" from_port="output" to_op="Read Database" to_port="connection"/>
+      <connect from_op="Read Database" from_port="output" to_op="Filter Examples" to_port="example set input"/>
+      <connect from_op="Filter Examples" from_port="example set output" to_op="Generate Attributes" to_port="table input"/>
+      <connect from_op="Generate Attributes" from_port="table output" to_op="Generate Copy" to_port="example set input"/>
+      <connect from_op="Generate Copy" from_port="example set output" to_op="Discretize" to_port="example set input"/>
+      <connect from_op="Discretize" from_port="example set output" to_op="Generate Absolutes" to_port="example set input"/>
+      <connect from_op="Generate Absolutes" from_port="example set output" to_op="Pivot" to_port="input"/>
+      <connect from_op="Pivot" from_port="output" to_op="Replace Missing Values" to_port="example set input"/>
+      <connect from_op="Replace Missing Values" from_port="example set output" to_op="Generate Attributes (2)" to_port="table input"/>
+      <connect from_op="Generate Attributes (2)" from_port="table output" to_op="Select Attributes" to_port="example set input"/>
+      <connect from_op="Select Attributes" from_port="example set output" to_op="Rename" to_port="example set input"/>
+      <connect from_op="Rename" from_port="example set output" to_op="Reorder Attributes" to_port="example set input"/>
+      <connect from_op="Reorder Attributes" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>
