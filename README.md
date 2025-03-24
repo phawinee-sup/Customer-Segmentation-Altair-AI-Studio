@@ -61,6 +61,3 @@ This project focuses on preparing data for customer segmentation, specifically a
 4. **Check the Output**  
    - Ensure the resulting dataset contains exactly **990 rows**.
    - You can check the output in the **Data** panel within Altair AI Studio.
-
-5. **Save and Export the Process**  
-   - After running the process, you can save the results or export the dataset for further analysis.
